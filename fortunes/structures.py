@@ -135,7 +135,7 @@ class CircleEvent:
 
     def handle(self, context):
         if self.aborted:
-            print("### I have been aborted")
+            # print("### I have been aborted")
             return []
         context.beach_line.remove_arc_node(self.middle)
         a = self.left.check_for_adjacent_circle_events(context)
@@ -220,9 +220,9 @@ class BeachLine():
             node.right_node.left_node = node.left_node
 
     def remove_arc_node(self, arc_node):
-        print("# removing", arc_node)
+        # print("# removing", arc_node)
         arc_node.arc.abort_event()
-        print("~~~~event aborted", arc_node.arc.die_event)
+        # print("~~~~event aborted", arc_node.arc.die_event)
         arc_node.left_node.left_node.arc.abort_event()
         arc_node.right_node.right_node.arc.abort_event()
 
@@ -247,7 +247,7 @@ class BeachLine():
             result += repr(cur)
             cur = cur.right_node
         if result != self.inv_rep():
-            print(result, self.inv_rep())
+            # print(result, self.inv_rep())
             assert False
         return result
 
@@ -289,6 +289,13 @@ class BreakPointNode():
                     x_max = self.right_node.compute_intersection(context)
                 except:
                     pass
+            if x_min == -1 and x_max < x_min:
+                x_min = x_max - 2
+            if x_max == 2 and x_max <= x_min:
+                x_max = x_min + 2
+            x_min, x_max = min(x_min, x_max), max(x_min, x_max)
+            # print("Plotting", self, x_min, x_max)
+
             self.arc.plot(context, x_min, x_max)
 
 
@@ -336,7 +343,7 @@ class BreakPointNode():
             pass
 
         to_add = [e for e in events if not e.aborted]
-        print(to_add)
+        # print(to_add)
         return to_add
 
 
@@ -371,7 +378,7 @@ class Arc():
 
     def abort_event(self):
         if self.die_event is not None:
-            print("aborring", self.die_event, "on", self, id(self))
+            # print("aborring", self.die_event, "on", self, id(self))
             self.die_event.aborted = True
         self.die_event = None
 
@@ -406,6 +413,7 @@ class EventQueue:
     def __init__(self, context):
         self.context = context
         self.events = []
+        self.done = set()
         for pid in range(len(context.points)):
             event = SiteEvent(pid)
             heappush(self.events, event.to_tuple(context))
@@ -421,17 +429,21 @@ class EventQueue:
                 ev.plot(self.context)
 
         ax.set_aspect('equal')
-        print("## after", self.context.beach_line)
+        # print("## after", self.context.beach_line)
         plt.waitforbuttonpress(timeout=-1)
 
     def handle_next(self):
         y, event = heappop(self.events)
+        ev_id = repr(event)
+        if ev_id in self.done:
+            return
+        self.done.add(ev_id)
         print("# handling", event)
         self.context.line = y
         new_events = event.handle(self.context)
         for new_event in new_events:
             tuple_to_add = new_event.to_tuple(self.context)
-            # print("Adding to the queu", tuple_to_add)
+            # # print("Adding to the queu", tuple_to_add)
             heappush(self.events, new_event.to_tuple(self.context))
 
     def __len__(self):

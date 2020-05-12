@@ -3,13 +3,14 @@ from structures import Context, Arc, BreakPointNode, EventQueue, walk_tree
 from scipy.spatial import voronoi_plot_2d, Voronoi
 import matplotlib.pyplot as plt
 import argparse
+
+np.random.seed(0)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--no-random", action='store_true',
                     help="Chose 30 points at random instead of manual input")
 args = parser.parse_args()
 
-
-np.random.seed(8)
 
 def gather_points_manually():
     ax = plt.gca()
@@ -20,7 +21,7 @@ def gather_points_manually():
     return np.array(points)
 
 def gather_points_random():
-    return np.random.uniform(-1, 1, size=(30, 2))
+    return np.random.uniform(0, 1, size=(30, 2))
 
 
 if __name__ == '__main__':

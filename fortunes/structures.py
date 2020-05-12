@@ -22,11 +22,11 @@ class BreakPoint():
 
 
 class BreakPointNode():
-    def __init__(self, breakpoint=None, arc=None):
+    def __init__(self, breakpoint=None, arc=None, left=None, right=None):
         self.breakpoint = breakpoint
         self.arc = arc
-        self.left_node = None
-        self.right_node = None
+        self.left_node = left
+        self.right_node = right
 
     def find_arc_node(self, x, context):
         if self.breakpoint is None:
@@ -36,32 +36,46 @@ class BreakPointNode():
             children = self.left_node if x < x_intersection else self.right_node
             return children.find_arc_node(x, context)
 
-    def __repr__(self):
+    @property
+    def base_rep(self):
         if self.breakpoint is not None:
-            result = repr(self.breakpoint)
+            return repr(self.breakpoint)
         else:
-            result = repr(self.arc)
-        if self.left_node is not None:
-            result = repr(self.left_node) + result
-        if self.right_node is not None:
-            result = result + repr(self.right_node)
+            return repr(self.arc)
+
+    def __repr__(self):
+        return self.base_rep
+
+    def full_rep(self):
+        result = self.base_rep
+        if self.breakpoint is not None:
+            if self.left_node is not None:
+                result = repr(self.left_node) + result
+            if self.right_node is not None:
+                result = result + repr(self.right_node)
         return result
 
     def __str__(self):
-        return repr(self)
+        return self.base_rep
 
     def insert_arc(self, arc, context):
         x_arc = x(context.points[arc.pid])
         arc_node = self.find_arc_node(x_arc, context)
+        left_leaf = arc_node.left_node
+        right_leaf = arc_node.right_node
         intersecting_arc = arc_node.arc
         left_br = BreakPoint(intersecting_arc, arc)
         right_br_node = BreakPointNode(breakpoint=BreakPoint(arc, intersecting_arc))
         arc_node.arc = None
         arc_node.breakpoint = left_br
-        arc_node.left_node = BreakPointNode(arc=intersecting_arc)
+        arc_node.left_node = BreakPointNode(arc=intersecting_arc, left=left_leaf)
         arc_node.right_node = right_br_node
-        right_br_node.left_node = arc
-        right_br_node.right_node = intersecting_arc
+        right_br_node.left_node = BreakPointNode(arc=arc,left=arc_node.left_node)
+        arc_node.left_node.right_node = right_br_node.left_node
+        right_br_node.right_node = BreakPointNode(arc=intersecting_arc,
+                                                  left=right_br_node.left_node,
+                                                  right=right_leaf)
+        right_br_node.left_node.right_node = right_br_node.right_node
 
 
 class Arc():
@@ -73,3 +87,18 @@ class Arc():
 
     def __str__(self):
         return repr(self)
+
+def walk_tree_recursive(node, state):
+    if node in state:
+        return
+    state[node] = set([node.left_node, node.right_node])
+    if None in state[node]:
+        state[node].remove(None)
+    print(state[node])
+    for n in state[node]:
+        walk_tree_recursive(n, state)
+
+def walk_tree(root):
+    state = {}
+    walk_tree_recursive(root, state)
+    return state

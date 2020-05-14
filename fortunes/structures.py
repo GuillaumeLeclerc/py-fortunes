@@ -277,8 +277,8 @@ class BreakPointNode():
 
     def plot(self, context):
         if self.is_arc_node:
-            x_min = -1
-            x_max = 2
+            x_min = -10
+            x_max = 10
             if self.left_node is not None:
                 try:
                     x_min = self.left_node.compute_intersection(context)
@@ -359,7 +359,7 @@ class Arc():
         return repr(self)
     
     def plot(self, context, x_min, x_max):
-        xes = np.linspace(x_min, x_max, 100)
+        xes = np.linspace(x_min, x_max, 200)
         point = context.points[self.pid]
         try:
             if y(point) == context.line:
